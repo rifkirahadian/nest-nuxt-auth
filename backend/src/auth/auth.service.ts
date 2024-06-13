@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { User } from './entities/user.entity';
 import { JwtService } from '@nestjs/jwt';
 
@@ -25,7 +21,7 @@ export class AuthService {
   async findOne(username: string): Promise<User> {
     const findUser = this.users.find((user) => user.username === username);
     if (!findUser) {
-      throw new NotFoundException('User not found');
+      throw new UnauthorizedException('User not found');
     }
 
     const user = new User();
@@ -39,7 +35,7 @@ export class AuthService {
   async signIn(
     username: string,
     pass: string,
-  ): Promise<{ access_token: string }> {
+  ): Promise<{ access_token: string; user: User }> {
     const user = await this.findOne(username);
     if (user?.password !== pass) {
       throw new UnauthorizedException();
@@ -47,6 +43,7 @@ export class AuthService {
     const payload = { sub: user.userId, username: user.username };
     return {
       access_token: await this.jwtService.signAsync(payload),
+      user,
     };
   }
 }
